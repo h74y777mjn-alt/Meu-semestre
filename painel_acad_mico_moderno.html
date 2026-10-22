@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Meu Semestre - Painel Acadêmico Moderno</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts & Phosphor Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Chart.js para a aba de estatísticas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.6);
+    }
+    
+    .glass-card {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    
+    .custom-ring {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .custom-ring:focus-within {
+      ring: 2px;
+      ring-color: #3b82f6;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-[#0b0f17] text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col md:flex-row transition-colors duration-300 selection:bg-brand-500 selection:text-white">
+
+  <!-- Sidebar Retrátil / Mobile Header Nav -->
+  <aside id="sidebar" class="w-full md:w-64 bg-white dark:bg-[#111623] border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800/80 flex-none sticky top-0 z-40 transition-all duration-300 md:min-h-screen flex flex-col justify-between">
+    <div>
+      <!-- Header / Logo -->
+      <div class="p-4 md:p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 font-bold text-xl">
+            <i class="ph ph-student"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg leading-tight tracking-tight text-slate-900 dark:text-white">Meu Semestre</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Gestão Acadêmica</p>
+          </div>
+        </div>
+        
+        <!-- Toggle Theme Button -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all" title="Alternar tema">
+          <i id="themeIcon" class="ph ph-moon text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="px-3 py-2 flex md:flex-col gap-1 overflow-x-auto no-scrollbar" id="mainNav">
+        <!-- Generado dinamicamente via JS -->
+      </nav>
+    </div>
+
+    <!-- Sidebar Footer / Data Status -->
+    <div class="hidden md:block p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0d111a]">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+        <span class="flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Auto-Salvo
+        </span>
+        <span id="saveTime" class="text-[10px]">agora</span>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button onclick="A.exp()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/60 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5 transition">
+          <i class="ph ph-export"></i> Exportar
+        </button>
+        <button onclick="A.impb()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-200/60 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5 transition">
+          <i class="ph ph-import"></i> Importar
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Input de arquivo oculto para Importação -->
+  <input type="file" id="imp" accept=".json" class="hidden" onchange="C.imp(this)">
+
+  <!-- Area de Conteudo Principal -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 overflow-y-auto">
+    <!-- Feedback Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-medium text-sm">
+      <i id="toastIcon" class="ph ph-check-circle text-emerald-400 dark:text-emerald-600 text-xl"></i>
+      <span id="toastMsg">Alterações salvas!</span>
+    </div>
+
+    <!-- Header com Ações Rápida Mobile & Boas Vindas -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h2 id="pageTitle" class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Painel Acadêmico</h2>
+        <p id="pageSubtitle" class="text-sm text-slate-500 dark:text-slate-400">Visão geral da sua jornada do semestre</p>
+      </div>
+
+      <!-- Ações globais secundárias -->
+      <div class="flex items-center gap-2">
+        <button onclick="loadSampleData()" class="text-xs font-semibold px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/50 dark:border-indigo-800/50 transition flex items-center gap-1.5">
+          <i class="ph ph-magic-wand text-base"></i> Carregar Dados de Exemplo
+        </button>
+        <button onclick="clearAllData()" class="text-xs font-semibold px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200/50 dark:border-rose-800/50 transition flex items-center gap-1.5">
+          <i class="ph ph-trash text-base"></i> Limpar
+        </button>
+      </div>
+    </div>
+
+    <!-- Conteúdo Dinâmico Renderizado Aqui -->
+    <div id="view" class="space-y-6"></div>
+  </main>
+
+  <script>
+    // --- ESTADO DA APLICAÇÃO ---
+    let S = { subjects: [], topics: [], evals: [] };
+    let tab = 'painel';
+    let open = {};
+    let nowD = new Date();
+    let M = { y: nowD.getFullYear(), m: nowD.getMonth() };
+    let performanceChart = null;
+
+    // --- UTILITÁRIOS ---
+    const $ = s => document.querySelector(s);
+    const uid = () => Math.random().toString(36).slice(2, 9);
+    const today = () => new Date().toLocaleDateString('sv');
+    const days = d => Math.round((new Date(d + 'T00:00') - new Date(today() + 'T00:00')) / 864e5);
+    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const v = id => ($('#' + id) || {}).value || '';
+    const sn = id => (S.subjects.find(s => s.id === id) || { n: 'Matéria Removida' }).n;
+    const fd = d => d ? new Date(d + 'T00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 'Sem data';
+    const hasG = e => e.g !== null && e.g !== undefined && e.g !== '';
+    const when = d => {
+      const n = days(d);
+      return n < 0 ? 'Concluída/Passou' : n === 0 ? 'Hoje' : n === 1 ? 'Amanhã' : 'Em ' + n + ' dias';
+    };
+    const byD = (a, b) => (a.d || '9999').localeCompare(b.d || '9999') || (a.h || '').localeCompare(b.h || '');
+
+    // --- CÁLCULOS ACADÊMICOS ---
+    function gr(s) {
+      const ev = S.evals.filter(e => e.sid === s.id);
+      const W = ev.reduce((a, e) => a + e.w, 0);
+      const g = ev.filter(hasG);
+      const gw = g.reduce((a, e) => a + e.w, 0);
+      const pts = g.reduce((a, e) => a + e.g * e.w, 0);
+      const rw = W - gw;
+      const cur = gw ? pts / gw : null;
+      let need = null, txt, cls;
+
+      if (!ev.length) {
+        txt = 'Sem provas'; cls = 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+      } else if (rw <= 0) {
+        const finalGrade = W > 0 ? pts / W : 0;
+        txt = finalGrade >= s.pass ? 'Aprovado 🎉' : 'Reprovado por Nota';
+        cls = finalGrade >= s.pass ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400';
+      } else {
+        need = (s.pass * W - pts) / rw;
+        if (need <= 0) {
+          txt = 'Aprovado antecipado';
+          cls = 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400';
+        } else if (need > 10) {
+          txt = 'Inviável por nota';
+          cls = 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400';
+        } else if (need > 7.5) {
+          txt = 'Em risco';
+          cls = 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400';
+        } else {
+          txt = 'No caminho';
+          cls = 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400';
+        }
+      }
+      return { cur, need, txt, cls, rw, W, gw, pts };
+    }
+
+    function ab(s) {
+      const lim = Math.floor(s.aulas * (100 - s.freq) / 100);
+      const left = lim - s.f;
+      const pct = lim ? s.f / lim : (s.f ? 1 : 0);
+      const lvl = left < 0 ? 2 : (left <= 2 || pct >= 0.75) ? 1 : 0;
+      const msg = left < 0 ? 'Limite excedido!' : left === 0 ? 'No limite maximo de faltas!' : lvl ? `Atenção: restam ${left} faltas` : `Restam ${left} faltas`;
+      const barColor = lvl === 2 ? 'bg-rose-500' : lvl === 1 ? 'bg-amber-500' : 'bg-emerald-500';
+      return { lim, left, pct, lvl, msg, barColor };
+    }
+
+    const upc = () => S.evals.filter(e => e.d && !hasG(e) && days(e.d) >= 0).sort(byD);
+    const covered = (t, ex) => S.evals.some(e => e.id !== ex && (e.tp || []).includes(t.id));
+
+    // --- COMPONENTES DE INTERFACE ---
+
+    // Menu Nav Config
+    const TABS = [
+      { id: 'painel', name: 'Painel', icon: 'ph-squares-four' },
+      { id: 'mat', name: 'Disciplinas', icon: 'ph-book-open' },
+      { id: 'av', name: 'Avaliações', icon: 'ph-exam' },
+      { id: 'cal', name: 'Calendário', icon: 'ph-calendar-blank' },
+      { id: 'est', name: 'Plano de Estudos', icon: 'ph-brain' },
+      { id: 'stat', name: 'Desempenho', icon: 'ph-chart-line-up' },
+    ];
+
+    function renderNav() {
+      $('#mainNav').innerHTML = TABS.map(t => {
+        const active = tab === t.id;
+        return `
+          <button onclick="A.tab('${t.id}')" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
+            active 
+              ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          }">
+            <i class="ph ${t.icon} text-lg"></i>
+            <span>${t.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    // --- TELAS ---
+
+    // 1. PAINEL PRINCIPAL
+    function pPainel() {
+      if (!S.subjects.length) {
+        return `
+          <div class="bg-white dark:bg-[#111623] rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800 max-w-xl mx-auto my-12 shadow-sm">
+            <div class="w-16 h-16 bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+              <i class="ph ph-graduation-cap"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Bem-vindo ao Meu Semestre!</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Comece cadastrando suas disciplinas e conteúdos para ter controle total das suas notas, faltas e prazos de exames.</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+              <button onclick="A.tab('mat')" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2">
+                <i class="ph ph-plus-circle text-lg"></i> Cadastrar Disciplinas
+              </button>
+              <button onclick="loadSampleData()" class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition flex items-center justify-center gap-2">
+                <i class="ph ph-magic-wand text-lg"></i> Usar Exemplo
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      const totalFaltas = S.subjects.reduce((a, s) => a + s.f, 0);
+      const pendingTopics = S.topics.filter(t => !t.st).length;
+      const upcomingEvals = upc();
+
+      // Alertas Urgentes
+      const alertFaltas = S.subjects.filter(s => ab(s).lvl > 0);
+      const urgentEvals = upcomingEvals.filter(e => days(e.d) <= 3);
+
+      return `
+        <!-- Quick Action / Stats Bar -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-[#111623] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl flex-none">
+              <i class="ph ph-books"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Disciplinas</p>
+              <h4 class="text-2xl font-extrabold text-slate-900 dark:text-white">${S.subjects.length}</h4>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#111623] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl flex-none">
+              <i class="ph ph-user-minus"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Faltas Totais</p>
+              <h4 class="text-2xl font-extrabold text-slate-900 dark:text-white">${totalFaltas}</h4>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#111623] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl flex-none">
+              <i class="ph ph-clock-afternoon"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Provas Futuras</p>
+              <h4 class="text-2xl font-extrabold text-slate-900 dark:text-white">${upcomingEvals.length}</h4>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#111623] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl flex-none">
+              <i class="ph ph-list-checks"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Tópicos Pendentes</p>
+              <h4 class="text-2xl font-extrabold text-slate-900 dark:text-white">${pendingTopics}</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner de Lembretes Urgentes se houver -->
+        ${(urgentEvals.length || alertFaltas.length) ? `
+          <div class="space-y-2">
+            ${urgentEvals.map(e => `
+              <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center gap-3 text-sm">
+                <i class="ph ph-warning-circle text-xl flex-none text-amber-600"></i>
+                <div class="flex-1">
+                  <strong>Prova Próxima:</strong> ${esc(e.t)} (${esc(sn(e.sid))}) - <b>${when(e.d)}</b>${e.h ? ` às ${e.h}` : ''}
+                </div>
+                <button onclick="A.tab('av')" class="text-xs font-semibold px-2.5 py-1 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition">Ver Provas</button>
+              </div>
+            `).join('')}
+
+            ${alertFaltas.map(s => {
+              const a = ab(s);
+              return `
+                <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 flex items-center gap-3 text-sm">
+                  <i class="ph ph-user-minus text-xl flex-none text-rose-600"></i>
+                  <div class="flex-1">
+                    <strong>Atenção às Faltas (${esc(s.n)}):</strong> ${s.f} de ${a.lim} faltas limite. ${a.msg}
+                  </div>
+                  <button onclick="A.tab('mat')" class="text-xs font-semibold px-2.5 py-1 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition">Ajustar</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+
+        <!-- Cards das Disciplinas Visão Geral -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="ph ph-book-bookmark text-brand-500"></i> Minhas Disciplinas
+            </h3>
+            <button onclick="A.tab('mat')" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">Gerenciar todas →</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${S.subjects.map(s => {
+              const g = gr(s);
+              const a = ab(s);
+              const topCount = S.topics.filter(t => t.sid === s.id && !t.st).length;
+              return `
+                <div class="bg-white dark:bg-[#111623] rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition space-y-4">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="font-bold text-slate-900 dark:text-white text-base leading-snug truncate">${esc(s.n)}</h4>
+                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full flex-none ${g.cls}">
+                      ${g.txt}
+                    </span>
+                  </div>
+
+                  <!-- Métricas Rápidas -->
+                  <div class="grid grid-cols-3 gap-2 py-2 border-y border-slate-100 dark:border-slate-800 text-center">
+                    <div>
+                      <span class="block text-[10px] text-slate-400 uppercase font-bold">Média Atual</span>
+                      <span class="text-lg font-bold text-slate-800 dark:text-slate-100">${g.cur == null ? '–' : g.cur.toFixed(1)}</span>
+                    </div>
+                    <div>
+                      <span class="block text-[10px] text-slate-400 uppercase font-bold">Precisa Tirar</span>
+                      <span class="text-lg font-bold ${g.need > 7.5 ? 'text-amber-500' : 'text-slate-800 dark:text-slate-100'}">${g.need == null ? '–' : g.need <= 0 ? '0' : g.need.toFixed(1)}</span>
+                    </div>
+                    <div>
+                      <span class="block text-[10px] text-slate-400 uppercase font-bold">Pode Faltar</span>
+                      <span class="text-lg font-bold text-slate-800 dark:text-slate-100">${Math.max(a.left, 0)}</span>
+                    </div>
+                  </div>
+
+                  <!-- Barra de Faltas -->
+                  <div>
+                    <div class="flex justify-between text-xs mb-1 font-medium">
+                      <span class="text-slate-500">Faltas: ${s.f} / ${a.lim} máx</span>
+                      <span class="${a.lvl === 2 ? 'text-rose-500 font-bold' : 'text-slate-400'}">${Math.round(a.pct * 100)}% do limite</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div class="${a.barColor} h-full transition-all duration-300" style="width: ${Math.min(100, a.pct * 100)}%"></div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
+                    <span><i class="ph ph-check-square-offset"></i> ${topCount} matérias p/ estudar</span>
+                    <button onclick="A.tab('av')" class="text-brand-600 dark:text-brand-400 font-semibold hover:underline">Ver Provas</button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Próximas Avaliações Cronograma -->
+        <div class="bg-white dark:bg-[#111623] rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="ph ph-calendar-check text-brand-500"></i> Próximos Compromissos
+          </h3>
+          <div class="space-y-3">
+            ${upcomingEvals.length ? upcomingEvals.slice(0, 5).map(e => `
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-lg">
+                    <i class="ph ph-note"></i>
+                  </div>
+                  <div>
+                    <h5 class="font-semibold text-slate-900 dark:text-white text-sm">${esc(e.t)}</h5>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">${esc(sn(e.sid))} · Peso ${e.w}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-bold px-2.5 py-1 rounded-full ${days(e.d) <= 3 ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-600' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
+                    ${when(e.d)}
+                  </span>
+                  <p class="text-[11px] text-slate-400 mt-1">${fd(e.d)}${e.h ? ' às ' + e.h : ''}</p>
+                </div>
+              </div>
+            `).join('') : '<p class="text-sm text-slate-500 py-4 text-center">Nenhuma avaliação futura cadastrada.</p>'}
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. DISCIPLINAS E FALTAS
+    function pMat() {
+      return `
+        <!-- Form Adicionar Disciplina -->
+        <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm mb-6">
+          <h3 class="font-bold text-slate-900 dark:text-white text-base mb-4 flex items-center gap-2">
+            <i class="ph ph-plus-circle text-brand-500"></i> Cadastrar Nova Disciplina
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="lg:col-span-2">
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Nome da Matéria</label>
+              <input id="s-n" placeholder="Ex: Cálculo I, Direito Constitucional" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Total de Aulas</label>
+              <input id="s-a" type="number" value="60" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">% Frequência Exigida</label>
+              <input id="s-f" type="number" value="75" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Média Aprovação</label>
+              <input id="s-p" type="number" step="0.1" value="7.0" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+          <button onclick="A.addSub()" class="mt-4 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-brand-500/20 transition flex items-center gap-2">
+            <i class="ph ph-plus font-bold"></i> Adicionar Disciplina
+          </button>
+        </div>
+
+        <!-- Lista de Disciplinas -->
+        <div class="space-y-4">
+          ${S.subjects.map(s => {
+            const a = ab(s);
+            const ts = S.topics.filter(t => t.sid === s.id);
+            return `
+              <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-extrabold text-lg text-slate-900 dark:text-white">${esc(s.n)}</h4>
+                    <p class="text-xs text-slate-500">Média exigida: <b>${s.pass}</b> · Aulas totais: <b>${s.aulas}</b> (${s.freq}% presencial)</p>
+                  </div>
+                  <button onclick="A.delSub('${s.id}')" class="text-slate-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Excluir Matéria">
+                    <i class="ph ph-trash text-lg"></i>
+                  </button>
+                </div>
+
+                <!-- Controle de Faltas Rápido -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 gap-3">
+                  <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Registro de Faltas</span>
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      ${s.f} faltas <span class="text-xs font-normal text-slate-400">(Máximo permitido: ${a.lim})</span>
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button onclick="A.fal('${s.id}', -1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold hover:bg-slate-100 transition flex items-center justify-center">-</button>
+                    <span class="font-bold text-sm px-2">${s.f}</span>
+                    <button onclick="A.fal('${s.id}', 1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold hover:bg-slate-100 transition flex items-center justify-center">+</button>
+                    <button onclick="A.resetFal('${s.id}')" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline ml-2">Zerar</button>
+                  </div>
+                </div>
+
+                <!-- Adicionar Tópico / Conteúdo -->
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 mb-1">Adicionar Tópicos do Edital/Conteúdo (Separe por ponto e vírgula ;)</label>
+                  <div class="flex gap-2">
+                    <input id="t-${s.id}" placeholder="Ex: Derivadas; Integrais; Limites" class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button onclick="A.addTop('${s.id}')" class="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition">
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Lista de Conteúdos -->
+                ${ts.length ? `
+                  <div class="space-y-1.5 pt-2">
+                    <p class="text-xs font-semibold text-slate-400 mb-2">Tópicos Cadastrados (${ts.filter(t=>t.st).length}/${ts.length} estudados):</p>
+                    ${ts.map(t => {
+                      const evs = S.evals.filter(e => (e.tp || []).includes(t.id));
+                      return `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/20 text-sm">
+                          <label class="flex items-center gap-3 cursor-pointer flex-1">
+                            <input type="checkbox" onchange="C.st('${t.id}', this)" ${t.st ? 'checked' : ''} class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                            <span class="${t.st ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}">${esc(t.n)}</span>
+                          </label>
+                          <div class="flex items-center gap-2">
+                            ${evs.length ? `
+                              <span class="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-brand-400 px-2 py-0.5 rounded-md font-medium">
+                                Caiu em: ${evs.map(e => esc(e.t)).join(', ')}
+                              </span>
+                            ` : '<span class="text-[10px] text-slate-400 px-2 py-0.5">Não cobrado</span>'}
+                            <button onclick="A.delTop('${t.id}')" class="text-slate-400 hover:text-rose-500 p-1"><i class="ph ph-x"></i></button>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // 3. AVALIAÇÕES E NOTAS
+    function pAv() {
+      if (!S.subjects.length) {
+        return `<div class="bg-white dark:bg-[#111623] p-8 rounded-2xl border text-center text-slate-500">Cadastre disciplinas antes de agendar avaliações.</div>`;
+      }
+
+      return `
+        <!-- Form Adicionar Avaliação -->
+        <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm mb-6">
+          <h3 class="font-bold text-slate-900 dark:text-white text-base mb-4 flex items-center gap-2">
+            <i class="ph ph-plus-circle text-brand-500"></i> Agendar Nova Prova / Trabalho
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Disciplina</label>
+              <select id="e-s" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                ${S.subjects.map(s => `<option value="${s.id}">${esc(s.n)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Título da Prova</label>
+              <input id="e-t" placeholder="Ex: Prova Regimental, P1, P2" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Data</label>
+              <input id="e-d" type="date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Horário</label>
+              <input id="e-h" type="time" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Peso</label>
+              <input id="e-w" type="number" step="0.1" value="1.0" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+          <button onclick="A.addEv()" class="mt-4 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-brand-500/20 transition flex items-center gap-2">
+            <i class="ph ph-plus font-bold"></i> Salvar Avaliação
+          </button>
+        </div>
+
+        <!-- Lista de Provas -->
+        <div class="space-y-4">
+          ${[...S.evals].sort(byD).map(e => {
+            const ts = S.topics.filter(t => t.sid === e.sid);
+            return `
+              <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 mb-1 inline-block">
+                      ${esc(sn(e.sid))}
+                    </span>
+                    <h4 class="font-extrabold text-lg text-slate-900 dark:text-white">${esc(e.t)}</h4>
+                    <p class="text-xs text-slate-500">Data: <b>${fd(e.d)}</b> ${e.h ? `às ${e.h}` : ''} · Peso <b>${e.w}</b></p>
+                  </div>
+
+                  <!-- Lançamento da Nota -->
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <label class="text-xs font-semibold text-slate-500">Nota Obtida:</label>
+                      <input type="number" step="0.1" min="0" max="10" placeholder="–" value="${hasG(e) ? e.g : ''}" onchange="C.grade('${e.id}', this)" class="w-16 px-2 py-1 text-center font-bold bg-white dark:bg-slate-900 border rounded-lg focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <button onclick="A.delEv('${e.id}')" class="text-slate-400 hover:text-rose-500 p-2">
+                      <i class="ph ph-trash text-lg"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Toggle para Selecionar Tópicos Cobrados -->
+                <div class="border-t border-slate-100 dark:border-slate-800/60 pt-3">
+                  <button onclick="A.tog('${e.id}')" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                    <i class="ph ${open[e.id] ? 'ph-caret-up' : 'ph-caret-down'}"></i> Conteúdos Cobrados nesta Prova (${(e.tp || []).length})
+                  </button>
+
+                  ${open[e.id] ? `
+                    <div class="mt-3 p-3 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl space-y-2">
+                      ${ts.length ? ts.map(t => `
+                        <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                          <input type="checkbox" onchange="C.cov('${e.id}', '${t.id}', this)" ${(e.tp || []).includes(t.id) ? 'checked' : ''} class="w-4 h-4 rounded text-brand-600">
+                          <span>${esc(t.n)}</span>
+                        </label>
+                      `).join('') : '<p class="text-xs text-slate-400">Nenhum tópico cadastrado na disciplina.</p>'}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // 4. CALENDÁRIO / AGENDA
+    function pCal() {
+      const { y, m } = M;
+      const first = new Date(y, m, 1).getDay();
+      const n = new Date(y, m + 1, 0).getDate();
+      const monthName = new Date(y, m, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+      return `
+        <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <button onclick="A.mon(-1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i class="ph ph-caret-left font-bold"></i>
+            </button>
+            <h3 class="font-bold text-slate-900 dark:text-white capitalize text-lg">${monthName}</h3>
+            <button onclick="A.mon(1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i class="ph ph-caret-right font-bold"></i>
+            </button>
+          </div>
+
+          <!-- Grade Calendário -->
+          <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center">
+            ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => `<div class="text-xs font-bold text-slate-400 py-1">${d}</div>`).join('')}
+            ${Array(first).fill('<div class="min-h-[60px] p-1"></div>').join('')}
+            ${Array.from({ length: n }, (_, i) => {
+              const dayNum = i + 1;
+              const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+              const isToday = ds === today();
+              const dayEvals = S.evals.filter(e => e.d === ds);
+
+              return `
+                <div class="min-h-[64px] sm:min-h-[72px] p-1 rounded-xl border ${isToday ? 'border-brand-500 bg-brand-50/20 dark:bg-brand-950/20' : 'border-slate-100 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-800/10'} text-left flex flex-col justify-between overflow-hidden">
+                  <span class="text-[11px] font-bold ${isToday ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500'}">${dayNum}</span>
+                  <div class="space-y-1">
+                    ${dayEvals.map(e => `
+                      <div class="text-[9px] font-semibold p-1 rounded bg-brand-600 text-white truncate" title="${esc(e.t)}">
+                        ${esc(sn(e.sid))}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Cronograma Geral -->
+        <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+          <h4 class="font-bold text-slate-900 dark:text-white mb-3">Agenda Completa de Avaliações</h4>
+          <div class="space-y-2">
+            ${upc().map(e => `
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 text-sm">
+                <div>
+                  <b class="text-slate-900 dark:text-white">${esc(e.t)}</b>
+                  <p class="text-xs text-slate-500">${esc(sn(e.sid))}</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-semibold text-brand-600 dark:text-brand-400">${fd(e.d)}${e.h ? ' às ' + e.h : ''}</span>
+                  <p class="text-[10px] text-slate-400">${when(e.d)}</p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 5. PLANO DE ESTUDOS INTELIGENTE
+    function pEst() {
+      const upcoming = upc();
+      if (!upcoming.length) {
+        return `<div class="bg-white dark:bg-[#111623] p-8 rounded-2xl border text-center text-slate-500">Nenhuma avaliação futura cadastrada. Cadastre provas para gerar o plano inteligente!</div>`;
+      }
+
+      return `
+        <div class="bg-white dark:bg-[#111623] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm mb-6 flex items-center gap-3">
+          <i class="ph ph-sparkle text-2xl text-amber-500 flex-none"></i>
+          <p class="text-xs text-slate-600 dark:text-slate-300">
+            <b>Algoritmo de Prioridade:</b> As matérias são ordenadas pela proximidade da prova. Dentro de cada matéria, tópicos que <b>ainda não caíram</b> em exames anteriores têm prioridade total.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          ${upcoming.map((e, idx) => {
+            const ts = S.topics.filter(t => t.sid === e.sid && !t.st).sort((a, b) => covered(a, e.id) - covered(b, e.id));
+            if (!ts.length) return '';
+
+            return `
+              <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-brand-600 text-white font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+                    <h4 class="font-bold text-slate-900 dark:text-white text-base">${esc(sn(e.sid))} — ${esc(e.t)}</h4>
+                  </div>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400">
+                    Proxima Prova: ${fd(e.d)}
+                  </span>
+                </div>
+
+                <div class="space-y-2">
+                  ${ts.map(t => {
+                    const isCov = covered(t, e.id);
+                    return `
+                      <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/60 text-sm">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                          <input type="checkbox" onchange="C.st('${t.id}', this)" class="w-4 h-4 rounded text-brand-600">
+                          <span class="text-slate-800 dark:text-slate-200 font-medium">${esc(t.n)}</span>
+                        </label>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isCov ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300' : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400'}">
+                          ${isCov ? 'Já cobrado antes' : '🔥 Prioridade Altíssima (Inédito)'}
+                        </span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // 6. ESTATÍSTICAS E DESEMPENHO (NOVA ABA)
+    function pStat() {
+      setTimeout(renderChart, 100);
+
+      const approvedCount = S.subjects.filter(s => {
+        const g = gr(s);
+        return g.cur !== null && g.cur >= s.pass;
+      }).length;
+
+      return `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm text-center">
+            <p class="text-xs text-slate-500 font-semibold uppercase">Índice de Aprovadas</p>
+            <h3 class="text-3xl font-extrabold text-emerald-500 mt-1">${approvedCount} / ${S.subjects.length}</h3>
+          </div>
+          <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm text-center">
+            <p class="text-xs text-slate-500 font-semibold uppercase">Provas Cadastradas</p>
+            <h3 class="text-3xl font-extrabold text-brand-500 mt-1">${S.evals.length}</h3>
+          </div>
+          <div class="bg-white dark:bg-[#111623] p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm text-center">
+            <p class="text-xs text-slate-500 font-semibold uppercase">Presença Global Média</p>
+            <h3 class="text-3xl font-extrabold text-indigo-500 mt-1">
+              ${S.subjects.length ? Math.round(S.subjects.reduce((a,s)=>a+(1 - (s.f/s.aulas)),0)/S.subjects.length * 100) : 0}%
+            </h3>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-[#111623] p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+          <h3 class="font-bold text-slate-900 dark:text-white text-base mb-4 flex items-center gap-2">
+            <i class="ph ph-chart-bar text-brand-500"></i> Desempenho Comparativo por Disciplina
+          </h3>
+          <div class="w-full h-80">
+            <canvas id="perfChart"></canvas>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('perfChart');
+      if (!ctx) return;
+
+      if (performanceChart) performanceChart.destroy();
+
+      const labels = S.subjects.map(s => s.n);
+      const dataGrades = S.subjects.map(s => gr(s).cur || 0);
+      const dataTarget = S.subjects.map(s => s.pass);
+
+      performanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Sua Média Atual',
+              data: dataGrades,
+              backgroundColor: '#3b82f6',
+              borderRadius: 8,
+            },
+            {
+              label: 'Média de Aprovação Exigida',
+              data: dataTarget,
+              backgroundColor: '#e2e8f0',
+              borderRadius: 8,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: { min: 0, max: 10 }
+          }
+        }
+      });
+    }
+
+    // --- AÇÕES & MUTADORES ---
+    const A = {
+      tab(i) {
+        tab = i;
+        renderNav();
+        render();
+      },
+      addSub() {
+        const n = v('s-n').trim();
+        if (!n) return showToast('Preencha o nome da disciplina!', 'ph-warning');
+        S.subjects.push({ id: uid(), n, aulas: +v('s-a') || 60, freq: +v('s-f') || 75, pass: +v('s-p') || 7, f: 0 });
+        save();
+        showToast('Disciplina cadastrada!');
+      },
+      delSub(i) {
+        if (!confirm('Deseja excluir esta disciplina e todos os seus dados?')) return;
+        S.subjects = S.subjects.filter(s => s.id !== i);
+        S.topics = S.topics.filter(t => t.sid !== i);
+        S.evals = S.evals.filter(e => e.sid !== i);
+        save();
+        showToast('Disciplina removida!');
+      },
+      fal(i, d) {
+        const s = S.subjects.find(s => s.id === i);
+        if (s) {
+          s.f = Math.max(0, s.f + +d);
+          save();
+        }
+      },
+      resetFal(i) {
+        const s = S.subjects.find(s => s.id === i);
+        if (s) {
+          s.f = 0;
+          save();
+          showToast('Faltas zeradas!');
+        }
+      },
+      addTop(i) {
+        const input = v('t-' + i);
+        input.split(';').map(x => x.trim()).filter(Boolean).forEach(n => {
+          S.topics.push({ id: uid(), sid: i, n, st: false });
+        });
+        save();
+      },
+      delTop(i) {
+        S.topics = S.topics.filter(t => t.id !== i);
+        S.evals.forEach(e => e.tp = (e.tp || []).filter(x => x !== i));
+        save();
+      },
+      addEv() {
+        const t = v('e-t').trim();
+        if (!t) return showToast('Preencha o título da avaliação!', 'ph-warning');
+        S.evals.push({
+          id: uid(),
+          sid: v('e-s'),
+          t,
+          d: v('e-d'),
+          h: v('e-h'),
+          w: +v('e-w') || 1,
+          g: null,
+          tp: []
+        });
+        save();
+        showToast('Avaliação agendada!');
+      },
+      delEv(i) {
+        S.evals = S.evals.filter(e => e.id !== i);
+        save();
+        showToast('Avaliação removida!');
+      },
+      tog(i) {
+        open[i] = !open[i];
+        render();
+      },
+      mon(d) {
+        M.m += +d;
+        if (M.m < 0) { M.m = 11; M.y--; }
+        if (M.m > 11) { M.m = 0; M.y++; }
+        render();
+      },
+      impb() { $('#imp').click(); },
+      exp() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(S));
+        const dl = document.createElement('a');
+        dl.setAttribute("href", dataStr);
+        dl.setAttribute("download", `backup-academico-${today()}.json`);
+        dl.click();
+        dl.remove();
+        showToast('Backup exportado!');
+      }
+    };
+
+    const C = {
+      st(i, el) {
+        const t = S.topics.find(t => t.id === i);
+        if (t) t.st = el.checked;
+        save();
+      },
+      cov(i, j, el) {
+        const e = S.evals.find(e => e.id === i);
+        if (e) {
+          e.tp = (e.tp || []).filter(x => x !== j);
+          if (el.checked) e.tp.push(j);
+          save();
+        }
+      },
+      imp(el) {
+        const f = el.files[0];
+        if (!f) return;
+        f.text().then(t => {
+          try {
+            const o = JSON.parse(t);
+            if (o.subjects && o.topics && o.evals) {
+              S = o;
+              save();
+              showToast('Dados importados com sucesso!');
+            } else alert('Formato de arquivo inválido.');
+          } catch (e) {
+            alert('Erro ao carregar o arquivo JSON.');
+          }
+        });
+      },
+      grade(i, el) {
+        const e = S.evals.find(e => e.id === i);
+        if (e) {
+          e.g = el.value === '' ? null : Math.min(10, Math.max(0, +el.value));
+          save();
+        }
+      }
+    };
+
+    // --- TEMAS (LIGHT/DARK) ---
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      $('#themeIcon').className = isDark ? 'ph ph-moon text-lg' : 'ph ph-sun text-lg';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+        $('#themeIcon').className = 'ph ph-sun text-lg';
+      } else {
+        document.documentElement.classList.add('dark');
+        $('#themeIcon').className = 'ph ph-moon text-lg';
+      }
+    }
+
+    // --- CARREGAR DADOS DE EXEMPLO ---
+    function loadSampleData() {
+      const s1 = uid(), s2 = uid(), s3 = uid();
+      const t1 = uid(), t2 = uid(), t3 = uid(), t4 = uid();
+
+      S = {
+        subjects: [
+          { id: s1, n: 'Cálculo Diferencial I', aulas: 80, freq: 75, pass: 7.0, f: 3 },
+          { id: s2, n: 'Algoritmos & Programação', aulas: 60, freq: 75, pass: 7.0, f: 1 },
+          { id: s3, n: 'Engenharia de Software', aulas: 60, freq: 75, pass: 6.0, f: 0 }
+        ],
+        topics: [
+          { id: t1, sid: s1, n: 'Limites e Continuidade', st: true },
+          { id: t2, sid: s1, n: 'Regras de Derivação', st: false },
+          { id: t3, sid: s2, n: 'Estruturas Condicionais', st: true },
+          { id: t4, sid: s3, n: 'Metodologias Ágeis (Scrum)', st: false }
+        ],
+        evals: [
+          { id: uid(), sid: s1, t: 'Prova P1', d: today(), h: '10:00', w: 1, g: 8.5, tp: [t1] },
+          { id: uid(), sid: s1, t: 'Prova P2', d: '2026-11-15', h: '10:00', w: 1.5, g: null, tp: [t2] },
+          { id: uid(), sid: s2, t: 'Trabalho Prático', d: '2026-11-05', h: '14:00', w: 1, g: 9.0, tp: [t3] }
+        ]
+      };
+      save();
+      showToast('Dados de demonstração carregados!');
+    }
+
+    function clearAllData() {
+      if (confirm('Deseja apagar TODOS os seus dados salvos?')) {
+        S = { subjects: [], topics: [], evals: [] };
+        save();
+        showToast('Dados limpos com sucesso!');
+      }
+    }
+
+    // --- SALVAMENTO E RENDER ---
+    function save() {
+      try {
+        localStorage.setItem('acad_v2', JSON.stringify(S));
+        $('#saveTime').textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        showToast('Erro ao salvar no dispositivo!', 'ph-warning');
+      }
+      render();
+    }
+
+    function showToast(msg, icon = 'ph-check-circle') {
+      const t = $('#toast');
+      $('#toastMsg').textContent = msg;
+      $('#toastIcon').className = `ph ${icon} text-xl`;
+      t.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+      setTimeout(() => {
+        t.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+      }, 2500);
+    }
+
+    function render() {
+      const activeTab = TABS.find(t => t.id === tab);
+      if (activeTab) {
+        $('#pageTitle').textContent = activeTab.name;
+      }
+
+      const views = {
+        painel: pPainel,
+        mat: pMat,
+        av: pAv,
+        cal: pCal,
+        est: pEst,
+        stat: pStat
+      };
+
+      $('#view').innerHTML = (views[tab] || pPainel)();
+    }
+
+    // INIT
+    window.onload = function() {
+      initTheme();
+      try {
+        const l = localStorage.getItem('acad_v2');
+        if (l) S = JSON.parse(l);
+      } catch (e) {}
+      renderNav();
+      render();
+    };
+  </script>
+</body>
+</html>
